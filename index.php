@@ -15,7 +15,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
     $action_id = $id.".".$oc;
 } 
-
+//783145.t1
+//FieryPerfmon_3
 ?>
 <!DOCTYPE html5>
 <html>
@@ -134,7 +135,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	console.log("dr: " + dr );
 
         //init_page (id, oc, dr);		    
-	update_page_display(id, oc, dr, "bot");
+	update_page_display(id, oc, dr, "top");
     });
 
     function init_page (id, oc, dr) {
@@ -210,9 +211,17 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         //alert("SS: "+index + " " + box);
 
         get_data_by_index(index, box);	
-        //row_selected(index, box);
+        row_selected(index, box);
     }//end start_selected()
 
+    function row_selected(index, box) {
+        var id_tag = "#row"+index+box;
+        var row_tag = ".row_select_"+box;
+	//RESET the selected row colors and highlight the new one...
+	$(row_tag).css({"background-color":"white", "color":"#3572b0"});	
+        $(id_tag).css({"background-color":"#3572b0", "color":"white"});
+
+    }
 
     function get_data_by_index(index, box){
         index = parseInt(index);
@@ -232,7 +241,6 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     }
 
     function update_chart(data, index, box){
-        alert(data);
         var name = "#name"+index+box;
 	//var proc_name = "<h2>"+$(name).html()+"</h2>"; 
         var proc_name = "<h2>Name Comming Soon</h2>";
@@ -258,6 +266,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	var options = {};        
 
 	options = {
+	    seriesColors: ["#3572b0", "#00CC00"],
 	    title: proc_name,
 	    cursor: {
                 show: true,
@@ -267,7 +276,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                 xaxis: {
 		    label:'Time (minutes)',
 		    tickInterval: 1,
-                    renderer: $.jqplot.CategoryAxisRenderer
+                    renderer: $.jqplot.CategoryAxisRenderer,
+                    pad: 0	    
                 },
                 yaxis: {
 		    renderer: $.jqplot.CategoryAxisRenderer
@@ -282,17 +292,16 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
             }
 	};
 
-        plot1 = $.jqplot('chart1', [plot_num_bot, plot_num_top], options);
+        plot1 = $.jqplot('chart1', [plot_num_top, plot_num_bot], options);
         plot1.replot( { resetAxes: true } );
     }
 
     function import_top(){
-        alert("TOP");
         ID_button_click("top");
     }
 
     function import_bot() {
-        alert("BOT");
+        
 	ID_button_click("bot");
     }
 
@@ -359,7 +368,6 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                     method: 'POST',
 	            data:  {'function': 'init_page', 'id': id, 'oc': oc, 'dr': dr, 'size' : ROW_SIZE, 'box' : box},
 	            success: function(str){
-		        alert(str);
 			var list_id = "#list_" + box;
 	                $(list_id).append(str);               
                         

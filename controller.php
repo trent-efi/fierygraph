@@ -90,7 +90,7 @@ function init_page($id, $oc, $dr, $size, $box){
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    $list = $list."</table><hr>";
+    $list = $list."</table>";
 
     return $list;
 }//end init_page()
