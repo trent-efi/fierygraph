@@ -1,14 +1,11 @@
 <?php
-if(!session_id()) { 
-    session_start(); 
-}
-
 $action = $_POST['function'];
 
 switch($action) {
-    case 'init_page': $id = $_POST['id']; $oc = $_POST['oc']; $dr = $_POST['dr']; echo init_page($id, $oc, $dr);  break;
-    case 'get_data_by_index': $index = $_POST['index']; echo get_data_by_index($index); break;
+    case 'init_page': $id = $_POST['id']; $oc = $_POST['oc']; $dr = $_POST['dr']; $size = $_POST['size']; $box = $_POST['box']; echo init_page($id, $oc, $dr, $size, $box);  break;
+    //case 'get_data_by_index': $index = $_POST['index']; echo get_data_by_index($index); break;
     case 'check_url': $url = $_POST['url']; echo check_url($url); break;
+    case 'get_data_arr' : $id = $_POST['id']; $oc = $_POST['oc']; $dr = $_POST['dr']; echo get_data_arr($id, $oc, $dr); break;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,18 +17,14 @@ switch($action) {
  * proceses and adds them to a 
  * container to referance later.
  *************************************/
-function init_page($id, $oc, $dr){
+function init_page($id, $oc, $dr, $size, $box){
 
     //Example:
     //\\C3-763642I1-GAL\Process(Fiery)\Thread Count
-
-    $data_arr = $_SESSION['data_arr'];
-
+    
     $index = 0;
 
-    $list_tol = get_tolerances($id, $oc, $dr);
     $list_all = get_all_procs($id, $oc, $dr);
- 
 
     $list = "<table>";
     ///////////////////////////////////////////////////////////////////////////
@@ -67,65 +60,40 @@ function init_page($id, $oc, $dr){
     // Lists all of the processes reguardless of tolerance file...
     ///////////////////////////////////////////////////////////////////////////
     $first = 0;
+    $page = 0;
     foreach($list_all as $all[0]){
         if($first != 0){
-	    $proc = substr($all[0][0], 2);//gets rid of first two '\' chars
-            $pos = strpos($proc, '\\');
-	    $proc = substr($proc, $pos);
-
-            $proc = preg_replace( '/[^[:print:]]/', '',$proc);
-            $line = "<tr class='row_select' id='row".$index."' onclick='start_selected(".$index.")'><td id='name".$index."'>".$proc."</td></tr>";
-	    $list = $list.$line;
-            $data_arr[] = $all;
-	    $index++;	
-
+	    if($all[0][1] != " ") {
+	        $proc = substr($all[0][0], 2);//gets rid of first two '\' chars
+                $pos = strpos($proc, '\\');
+	        $proc = substr($proc, $pos);
+                $proc = preg_replace( '/[^[:print:]]/', '',$proc);
+                $line = "<tr class='row_select_".$box."' id='row".$index.$box."' onclick='start_selected(".$index.", \"".$box."\")'><td id='name".$index.$box."'>".$proc."</td></tr>";
+	        $list = $list.$line;
+                $data_arr[] = $all;
+	        $proc_arr[] = $proc;
+	        $index++;	
+	    }
 	} else {
 	    $first = 1;
 	}
     }
-    ///////////////////////////////////////////////////////////////////////////
-    $_SESSION['data_arr'] = $data_arr;
-    $_SESSION['name_arr'] = $list_tol;
-    $list = $list."</table><hr>";
-    return $list;
-}
 
+    $extra_rows = $index % $size;
+    $extra_rows = $size - $extra_rows;
+    $i = 0;
 
-/**************************************
- * Parse test_FieryPerfmon.txt for
- * tolerances
- *************************************/
-function get_tolerances($id, $oc, $dr){
-
-    $url = "http://calculus-logs.efi.internal/logs/".$id.".".$oc."/".$dr."/test_FieryPerfmon.txt";
-    $data = file_get_contents($url);
-
-    if (empty($data)) {
-        return "BAD INPUT: ".$id."<br>";
+    while($i < $extra_rows){
+	$list = $list."<tr class='row_select' id='row".$index."'><td></td></tr>";
+	$index++;
+        $i++;	
     }
 
-    $rows = explode("\n", $data);
-    $s = array();
-    $temp = array();
+    ///////////////////////////////////////////////////////////////////////////
+    $list = $list."</table><hr>";
 
-    //Example output from "test_FieryPerfmon.txt"
-    //PROCESS: \Memory\Available Bytes Tolerance -25
-    foreach($rows as $row) {
-
-	$arr = explode(" ", trim($row) );
-        if(count($arr) > 0){ 
-	    if($arr[0] == "PROCESS:"){
-		$loc = strpos($row, "Tolerance");
-		$str = substr($row, 9, $loc - 10 );
-                $s[] = $str;
-	    }
-	}
-
-             
-    } 
-  
-    return $s;
-}
+    return $list;
+}//end init_page()
 
 /**************************************
  * Parse FieryPerfmon_1.csv into 
@@ -138,8 +106,6 @@ function get_all_procs($id, $oc, $dr) {
     //http://calculus-logs.efi.internal/logs/763642.t1/FieryPerfmon_1/FieryPerfmon.csv  //columns
 
     $url = "http://calculus-logs.efi.internal/logs/".$id.".".$oc."/".$dr."/FieryPerfmon_1.csv";
-    //$url = "http://calculus-logs.efi.internal/logs/765006.t0/FieryPerfmon_1/FieryPerfmon_1.csv";
-
     $data = file_get_contents($url);
 
     if (empty($data)) {
@@ -155,38 +121,32 @@ function get_all_procs($id, $oc, $dr) {
     //echo var_dump($s);
 
     return $s;
-}
+}//end get_all_procs()
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Functions that are called after page has started:
-///////////////////////////////////////////////////////////////////////////////
 
-/**************************************
- * Lookup the values at the given 
- * index from the SESSION variable and 
- * return the data for the chart.
- *************************************/
-function get_data_by_index($index) {
-    $data_arr = $_SESSION['data_arr'];
+function get_data_arr($id, $oc, $dr){
+    $data_arr = array();
 
-    $data = "";
-    $i = 0;
-    $length = count($data_arr[$index][0]);
-    foreach($data_arr[$index][0] as $num){
-        if($i > 0) {
-	    if($i < ($length - 1) ) {
-                $data = $data.$num.", ";
-	    } else {
-	        $data = $data.$num;
+    $list_all = get_all_procs($id, $oc, $dr);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Lists all of the processes reguardless of tolerance file...
+    ///////////////////////////////////////////////////////////////////////////
+    $first = 0;
+    foreach($list_all as $all[0]){
+        
+        if($first != 0){
+	    if($all[0][1] != " ") {
+                $data_arr[] = $all;
 	    }
+	} else {
+	    $first = 1;
 	}
-	$i++;
     }
-
-    //echo "PHP: ".var_dump($data);
-    return $data;
-}
+    //echo "<script>console.log('in PHPH');<script>";
+    return json_encode($data_arr);
+}//end get_data_arr()
 
 /**************************************
  * Checks if a valid FieryPerfmon url
@@ -200,10 +160,8 @@ function check_url($url){
         return "false";
     } else {
         return "true";
-    }
-
-
-    
+    }    
 }
-?>
 
+
+?>
