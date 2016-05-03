@@ -42,8 +42,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	            <div id="list_top"></div>
 		    <div id="footer_base">
                         <div>
-			    <img class="prev_top" id="prev_next" src="/fierygraph/prev.png"/>
-			    <img class="next_top" id="prev_next" src="/fierygraph/next.png"/>
+			    <img class="prev_top" onclick="prev_page('top')" id="prev_next" src="/fierygraph/prev.png"/>
+			    <img class="next_top" onclick="next_page('top')" id="prev_next" src="/fierygraph/next.png"/>
 			</div>
 			<hr>
 			<div id="foot_box">
@@ -73,8 +73,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	            <div id="list_bot"></div>
 		    <div id="footer_base">
                         <div>
-			    <img class="prev_bottom" id="prev_next" src="/fierygraph/prev.png"/>
-			    <img class="next_bottom" id="prev_next" src="/fierygraph/next.png"/>
+			    <img class="prev_bot" onclick="prev_page('bot')" id="prev_next" src="/fierygraph/prev.png"/>
+			    <img class="next_bot" onclick="next_page('bot')" id="prev_next" src="/fierygraph/next.png"/>
 			</div>
 			<hr>
 			<div id="foot_box">
@@ -109,8 +109,12 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	</div>	
 
     <script class="code" type="text/javascript">
-    MAX_PAGE = 0;
-    CUR_PAGE = 0;
+    MAX_PAGE_TOP = 0;
+    MAX_PAGE_BOT = 0;
+    
+    CUR_PAGE_TOP = 0;
+    CUR_PAGE_BOT = 0;
+    
     ROW_SIZE = 10;
     DATA_ARR_TOP = new Array();
     DATA_ARR_BOT = new Array();
@@ -118,21 +122,25 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     INDEX_BOT = 0;
     PLOT_NUM_TOP = new Array();
     PLOT_NUM_BOT = new Array();
-    
+   
+    COLOR_0 = '#';
+    COLOR_1 = '#';
 
     $(document).ready(function(){
-        var plot1 = $.jqplot ('chart1', [[3,7,9,1,5,3,8,2,5]]);
+        //var plot1 = $.jqplot ('chart1', [[3,7,9,1,5,3,8,2,5]]);
         var id = <?php echo $id; ?>;
         var oc = <?php echo $oc; ?>;
 	var dr = <?php echo $dr; ?>;
         
-        //PLOT_NUM_BOT = [99.3076154971, 99.3076154971, 99.3076154971, 99.3076154971, 99.3076154971, 99.3076154971, 99.181638627, 99.181638627, 99.181638627, 99.181638627, 99.181638627, 99.181638627, 99.1743143904, 99.1743143904, 99.1743143904, 99.1743143904, 99.1743143904, 99.1743143904, 99.1630838942, 99.1630838942, 99.1630838942, 99.1630838942, 99.1630838942, 99.1630838942, 99.162839753, 99.162839753, 99.162839753, 99.162839753, 99.162839753, 99.162839753, 99.1674784362, 99.1674784362, 99.1674784362, 99.1674784362, 99.1674784362, 99.1674784362, 99.1601541996, 99.1601541996, 99.1601541996, 99.1601541996, 99.1601541996, 99.1601541996, 99.1618631881, 99.1618631881, 99.1618631881, 99.1618631881, 99.1618631881, 99.1618631881, 99.1547830927, 99.1547830927, 99.1547830927, 99.1547830927, 99.1547830927, 99.1547830927, 99.1513651156, 99.1513651156, 99.1513651156, 99.1513651156, 99.1513651156, 99.1513651156, 99.1542948103, 99.1542948103, 99.1542948103, 99.1542948103, 99.1542948103, 99.1542948103, 99.1574686462, 99.1574686462, 99.1574686462, 99.1574686462, 99.1574686462, 99.1574686462, 99.1538065278, 99.1538065278, 99.1538065278, 99.1538065278, 99.1538065278, 99.1538065278, 99.1530741042, 99.1530741042, 99.1530741042, 99.1530741042, 99.1530741042, 99.1530741042, 99.1616190469, 99.1616190469, 99.1616190469, 99.1616190469, 99.1616190469, 99.1616190469, 99.1777323675, 99.1777323675, 99.1777323675, 99.1777323675, 99.1777323675, 99.1777323675, 99.1833476156, 99.1833476156, 99.1833476156, 99.1833476156, 99.1833476156, 99.1833476156, 99.2082500201, 99.2082500201, 99.2082500201, 99.2082500201, 99.2082500201, 99.2082500201, 99.2265606117, 99.2265606117, 99.2265606117, 99.2265606117, 99.2265606117, 99.2265606117, 99.241209085, 99.241209085, 99.241209085, 99.241209085, 99.241209085, 99.241209085, 99.2604962414, 99.2604962414, 99.2604962414];
-
-        //PLOT_NUM_BOT = [2765185024, 2542374912, 2448568320, 2515464192, 2493407232, 2495176704, 2487017472, 2511806464, 2482704384, 2587635712, 2612002816, 2536095744, 2567692288, 2398334976, 2313175040, 2414546944, 2412097536, 2300383232, 2392719360, 2424385536, 2411180032, 2375929856, 2391162880, 2399596544, 2371047424, 2413117440, 2463649792, 2466881536, 2471239680, 2386477056, 2451836928, 2431492096, 2449879040, 2450186240, 2460512256, 2431422464, 2420854784, 2390740992, 2404573184, 2426974208, 2422706176, 2442170368, 2446098432, 2381852672, 2403975168, 2394247168, 2381094912, 2395422720, 2384859136, 2381574144, 2384916480, 2387492864, 2387808256, 2348118016, 2395664384, 2395443200, 2418167808, 2405285888, 2413617152, 2390466560, 2386214912, 2388709376, 2349289472, 2386124800, 2397970432, 2376110080, 2325655552, 2377539584, 2395283456, 2381643776, 2364157952, 2355347456, 2411524096, 2381840384, 2418581504, 2408980480, 2399059968, 2393108480, 2372587520, 2369392640, 2373099520, 2367053824, 2395693056, 2384334848, 2387767296, 2352533504, 2374025216, 2416775168, 2337595392, 2402975744, 2393804800, 2374524928, 2352771072, 2397286400, 2385813504, 2402787328, 2361147392, 2385371136, 2373566464, 2178961408, 2253561856, 2231951360, 2362880000, 2338504704, 2350448640, 2344439808, 2294591488, 2247438336, 2243252224, 2242244608, 2240811008, 2271870976, 2232979456, 2275282944, 2271596544, 2267734016, 2260865024, 2302398464, 2286170112, 2279383040, 2280751104, 2281922560, 2279948288];
-        //alert();
 	console.log("id: " + id );
 	console.log("oc: " + oc );
 	console.log("dr: " + dr );
+
+        while (COLOR_0 == COLOR_1){
+	    COLOR_0 = '#'+Math.floor(Math.random()*16777215).toString(16);
+	    COLOR_1 = '#'+Math.floor(Math.random()*16777215).toString(16);
+	}
+      
 
         //init_page (id, oc, dr);		    
 	update_page_display(id, oc, dr, "top");
@@ -176,6 +184,12 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
   
         //alert(page_num + box);
 
+        var max_page = 0;
+        if (box == "top") {
+	    max_page = MAX_PAGE_TOP;
+	} else {
+	    max_page = MAX_PAGE_BOT;
+	}
 
 	var class_name = ".row_select_" + box;
         var prev_id = ".prev_" + box;
@@ -186,14 +200,14 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         $(prev_id).css({"visibility":"hidden"});
         $(next_id).css({"visibility":"hidden"});
         
-        if (page_num == 0 && page_num < MAX_PAGE && MAX_PAGE > 1) {
+        if (page_num == 0 && page_num < max_page && max_page > 1) {
 	    $(next_id).css({"visibility":"visible"});
 	} 
-	if (page_num > 0 && page_num < MAX_PAGE && MAX_PAGE > 1) {
+	if (page_num > 0 && page_num < max_page && max_page > 1) {
 	    $(prev_id).css({"visibility":"visible"});
             $(next_id).css({"visibility":"visible"});
 	} 
-	if (page_num >= MAX_PAGE && MAX_PAGE > 1) {
+	if (page_num >= max_page && max_page > 1) {
 	    $(prev_id).css({"visibility":"visible"});
 	}
 	
@@ -240,6 +254,27 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	
     }
 
+    function prev_page(box) {
+        if(box == "top") {
+            CUR_PAGE_TOP--;
+	    handle_row_display(CUR_PAGE_TOP, box);
+	} else {
+	    CUR_PAGE_BOT--;
+	    handle_row_display(CUR_PAGE_BOT, box);
+	}
+    }
+
+    function next_page(box) {
+
+        if(box == "top") {
+            CUR_PAGE_TOP++;
+	    handle_row_display(CUR_PAGE_TOP, box);
+	} else {
+	    CUR_PAGE_BOT++;
+	    handle_row_display(CUR_PAGE_BOT, box);
+	}
+    }
+
     function update_chart(data, index, box){
         var name = "#name"+index+box;
 	//var proc_name = "<h2>"+$(name).html()+"</h2>"; 
@@ -266,7 +301,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	var options = {};        
 
 	options = {
-	    seriesColors: ["#3572b0", "#00CC00"],
+	    seriesColors: [ COLOR_0, COLOR_1],
 	    title: proc_name,
 	    cursor: {
                 show: true,
@@ -368,22 +403,32 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                     method: 'POST',
 	            data:  {'function': 'init_page', 'id': id, 'oc': oc, 'dr': dr, 'size' : ROW_SIZE, 'box' : box},
 	            success: function(str){
+                        //alert(str);
+		        
 			var list_id = "#list_" + box;
 	                $(list_id).append(str);               
                         
 			var length = 0;
                         if(box == "top") {
                             length = DATA_ARR_TOP.length;
+			    MAX_PAGE_TOP = Math.floor(length / ROW_SIZE);
+
+		            if( MAX_PAGE_TOP <= 0) {
+		                MAX_PAGE_TOP = 1;
+		            }
+
 			} else {
-                            length = DATA_ARR_BOT.length;			
+                            length = DATA_ARR_BOT.length;
+			    MAX_PAGE_BOT = Math.floor(length / ROW_SIZE);
+
+		            if( MAX_PAGE_BOT <= 0) {
+		                MAX_PAGE_BOT = 1;
+		            }
+			    
 			}
-
-			MAX_PAGE = Math.floor(length / ROW_SIZE);
-
-		        if(MAX_PAGE <= 0) {
-		            MAX_PAGE = 1;
-		        }
+                        
                         handle_row_display(0, box);
+
                         //click the first row...
 			var row_id = "#row0" + box;
 		        $(row_id).click(); 
