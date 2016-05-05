@@ -27,7 +27,9 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> 	
         <link href="http://getbootstrap.com/assets/css/docs.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="style.css">
-
+        <script type="text/javascript" src="dist/jquery.jqplot.min.js"></script>
+        <script type="text/javascript" src="dist/plugins/jqplot.cursor.min.js"></script>
+        <script type="text/javascript" src="dist/plugins/jqplot.highlighter.min.js"></script>
         <script type="text/javascript" src="dist/jquery.jqplot.js"></script>
         <script type="text/javascript" src="dist/plugins/jqplot.json2.js"></script>
         <link rel="stylesheet" type="text/css" href="dist/jquery.jqplot.css" />	
@@ -122,11 +124,15 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     INDEX_BOT = 0;
     PLOT_NUM_TOP = new Array();
     PLOT_NUM_BOT = new Array();
-   
+
+    SERIES_DATA_TOP = new Array();
+    SERIES_DATA_BOT = new Array();
+
     COLOR_0 = '#';
     COLOR_1 = '#';
 
     $(document).ready(function(){
+        $.jqplot.config.enablePlugins = true;
         //var plot1 = $.jqplot ('chart1', [[3,7,9,1,5,3,8,2,5]]);
         var id = <?php echo $id; ?>;
         var oc = <?php echo $oc; ?>;
@@ -145,40 +151,6 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         //init_page (id, oc, dr);		    
 	update_page_display(id, oc, dr, "top");
     });
-
-    function init_page (id, oc, dr) {
-        $.ajax({
-            url: 'controller.php',
-            method: 'POST',
-	    data:  {'function': 'get_data_arr', 'id': id, 'oc': oc, 'dr': dr},
-	    success: function(str){
-	        //alert(str);
-
-                var arr = JSON.parse(str);
-	        DATA_ARR_TOP = arr;
-
-		$.ajax({
-                    url: 'controller.php',
-                    method: 'POST',
-	            data:  {'function': 'init_page', 'id': id, 'oc': oc, 'dr': dr, 'size' : ROW_SIZE, 'box' : 'top'},
-	            success: function(str){
-		        //alert(str);
-	                $("#list_top").append(str);               
-
-                        var length = DATA_ARR_TOP.length;
-			MAX_PAGE = Math.floor(length / ROW_SIZE);
-
-		        if(MAX_PAGE <= 0) {
-		            MAX_PAGE = 1;
-		        }
-                        handle_row_display(0, 'top');
-                        //click the first row...
-		        $("#row0top").click(); 
-	            }   
-                });
-	    }
-        });
-    }//end init_page()
 
     function handle_row_display(page_num, box){
   
@@ -243,15 +215,10 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	if(box == "top"){
 	    INDEX_TOP = index;
             update_chart( DATA_ARR_TOP[index][0], index, box );
-	    
 	} else {
 	    INDEX_BOT = index;
-            update_chart( DATA_ARR_BOT[index][0], index, box );
-	    
-	}
-
-        //update_chart( DATA_ARR_TOP[INDEX_TOP][0], DATA_ARR_BOT[INDEX_BOT][0], index, box );
-	
+            update_chart( DATA_ARR_BOT[index][0], index, box );	    
+	}	
     }
 
     function prev_page(box) {
@@ -303,9 +270,23 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	options = {
 	    seriesColors: [ COLOR_0, COLOR_1],
 	    title: proc_name,
-	    cursor: {
+	    legend: {
                 show: true,
-                zoom: true
+                rendererOptions: {
+                    // numberColumns: 2,
+                    fontSize: '10pt'
+                }
+	    },
+            seriesDefaults: {
+                renderer: $.jqplot.FunnelRenderer
+            },
+	    cursor: {
+                zoom:true, 
+                looseZoom: true, 
+                showTooltip:true, 
+                followMouse: true, 
+                showTooltipOutsideZoom: true, 
+                constrainOutsideZoom: false
             },
             axes: {
                 xaxis: {
@@ -336,7 +317,6 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     }
 
     function import_bot() {
-        
 	ID_button_click("bot");
     }
 
@@ -426,7 +406,21 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 		            }
 			    
 			}
-                        
+                       
+		        $.ajax({
+			    url: 'controller.php',
+			    method: 'POST',
+			    data: {'function': 'get_time_line', 'id': id, 'oc': oc, 'dr': dr, 'box': box},
+			    success: function(str) {
+				if(box == "top") {
+				    SERIES_DATA_TOP = str;
+				} else {
+				    SERIES_DATA_BOT = str;
+				}
+				console.log(str);
+			    }
+			});
+
                         handle_row_display(0, box);
 
                         //click the first row...
