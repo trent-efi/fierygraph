@@ -195,96 +195,108 @@ function get_time_line($id, $oc, $dr, $box) {
 
     $rows = explode("\n",$data);
     $log  = array();
-    
-    $flag = 0;
-    $i = 0; 
-    $test_name = " TRENT";
+    $temp = array();
+
+    $i = 0;
+    $index = 0;
+    $str = "";
+    $test_name = "Initialization";
     //Trim and load data from testlog.txt
     foreach($rows as $row) {
-        if($flag > 1) {
-	    $textlog_row = explode(": ", $row);
 
-            if (strpos( $textlog_row[3], 'finished running test' ) !== false) {
-	        if ($i > 0) {
-		    $date_str = explode(" : ", $log[$i - 1]);
-		    $date_prev = new DateTime($date_str[0]);
-		    $date_curr = new DateTime($textlog_row[0]);
-		    if($date_curr != $date_prev ) {
-	   	        $log[] = $textlog_row[0].": ".$textlog_row[3]." ".$textlog_row[4];  
-                        $i = $i + 1;
-                        $test_name = $textlog_row[3]." ".$textlog_row[4]; 		
-		    }
-		} else {
-	   	    $log[] = $textlog_row[0].": ".$textlog_row[3]." ".$textlog_row[4];
-	            $i = $i + 1;
-                    $test_name = $textlog_row[3]." ".$textlog_row[4]; 		    
-		}
-		
-	    } elseif (strpos($textlog_row[3], 'running test' ) !== false) { 
+        if($i > 1){
+	    $temp = explode(" : ", $row);
+	    $str = $temp[3];
 
-	        if ($i > 0) {
-		    $date_str = explode(" : ", $log[$i - 1]);
-		    $date_prev = new DateTime($date_str[0]);
-		    $date_curr = new DateTime($textlog_row[0]);
-		    if($date_curr != $date_prev ) {
-	   	        $log[] = $textlog_row[0].": ".$textlog_row[3];  
-                        $i = $i + 1;
-                        $test_name = $textlog_row[3]; 		
-		    }
-		} else {
-	   	    $log[] = $textlog_row[0].": ".$textlog_row[3];
-	            $i = $i + 1;
-                    $test_name = $textlog_row[3]; 		    
-		}
-	    		
-            } elseif($textlog_row[0] != "") {
+            if(strpos($str, 'finished running test' ) !== false){
+	        $log[] = $temp[0]." : ".$temp[3];
+	        $test_name = $temp[3];
+	    } elseif(strpos($str, 'running test' ) !== false){
+	        $log[] = $temp[0]." : ".$temp[3];
+	        $test_name = $temp[3];	        
+	    } elseif($temp[0] != ""){
+	        $log[] = $temp[0]." : ".$test_name;
+	    }
+	} else {
+	    $i = $i + 1;
+	}
+    }
 
-	        if ($i > 0) {
-		    $date_str = explode(" : ", $log[$i - 1]);
-		    $date_prev = new DateTime($date_str[0]);
-		    $date_curr = new DateTime($textlog_row[0]);
-		    if($date_curr != $date_prev ) {
-                        $log[] = $textlog_row[0].": ".$test_name;
-                        $i = $i + 1;
-		    }
-		} else {
-	   	    $log[] = $textlog_row[0].": ".$test_name;
-		    $i = $i + 1; 		    
-		}
-		
-	    }//end if/elseif block
+    $log_set = array();
+    $i = 0;
+    $date_prev = "";
+    $date_curr = "";
+
+
+    //Clean up the repeated date times...
+    foreach($log as $log_row){
+        $log_temp = explode(" : ", $log_row);
+        if($i > 0){
+            	
+            $date_curr = $log_temp[0];
+
+	    if(strcmp(  $date_prev, $date_curr ) != 0){
+	        $i = $i + 1;
+	        $log_set[] = $log_row;
+	    }
+ 
+            $date_prev = $date_curr;
 
 	} else {
-	    $flag = $flag + 1;
-	}//end if/else block
+	    $date_prev = $log_temp[0];
+	    $log_set[] = $log_row;
+	    $i = $i + 1;
+	}
     }
 
     //START filling the time array with the data from foo and log...
-    $time_arr = array();
+    $time_line = array();
     
     $i = 0;
-    /*foreach($foo as $date_str) {
-        $foobar = explode(" : ", $log[$i]);
-        //$date_str = explode(" : ", $entry);
+    $date_prev = "";
+    $date_curr = "";
 
-	$date_index = new DateTime($date_str);
-	$date_log = new DateTime($foobar[0]);
 
-        while($date_index < $date_log) {
-            $i = $i + 1;
+    foreach($foo as $date_str) {
+        
+	//get the next date in foo..
+	$date_tickmark = substr( $date_str, 0, 19 );
+	$date_curr = new DateTime($date_tickmark);
+
+        //get the next date from the log set...
+        $date_logfile = explode(" : ", $log_set[$i]); 
+	$date_cmp = new DateTime($date_logfile[0]);
+
+
+        //echo "\nTICK".$date_tickmark."\n";
+        //echo "LOGG".$date_logfile[0]."\n";
+	
+       
+        //echo $date_curr->format('Y-m-d H:i:s')."\n";     
+	if($date_curr < $date_cmp){
+	    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." < cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
+	} else {
+	    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." >= cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
+
 	}
-
-
-	$time_arr[] = $date_str;
-    }*/
-
+	/*while($date_curr->format('Y-m-d H:i:s') < $date_cmp->format('Y-m-d H:i:s') ) {
+            $i = $i + 1;
+	    $date_logfile = explode(" : ", $log_set[$i]); 
+	    $date_cmp = new DateTime($date_logfile[0]);
+	}*/
+        
+	//$time_line[] = substr( $date_str, 0, 19 );
+	$time_line[] = $date_tickmark." : ".$date_logfile[1];
+	//$i = $i + 1;
+    }
+    //"Y-m-d H:i:s"
     //$date = new DateTime('2000-01-01');
 
 
+    //echo var_dump($log_set);
+    //echo var_dump($time_line);
 
-    echo var_dump($rows);
-
-    return $log;
+    return $time_line;
 }
 
 ?>
