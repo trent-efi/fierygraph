@@ -257,28 +257,29 @@ function get_time_line($id, $oc, $dr, $box) {
     $date_curr = "";
 
 
-    foreach($foo as $date_str) {
-        
+    foreach($log_set as $date_str) {
+        echo $date_str."\n";
+        //get the next date from the log set...        
+	//$date_log = explode(" : ", $date_str);
+	//$date_curr = new DateTime($date_log);
+
 	//get the next date in foo..
-	$date_tickmark = substr( $date_str, 0, 19 );
-	$date_curr = new DateTime($date_tickmark);
+	//$date_ticks = substr( $foo[i], 0, 19 );
+	//$date_cmp = new DateTime($date_tickmark);
 
-        //get the next date from the log set...
-        $date_logfile = explode(" : ", $log_set[$i]); 
-	$date_cmp = new DateTime($date_logfile[0]);
-
+        //$i = $i + 1;
 
         //echo "\nTICK".$date_tickmark."\n";
         //echo "LOGG".$date_logfile[0]."\n";
 	
        
         //echo $date_curr->format('Y-m-d H:i:s')."\n";     
-	if($date_curr < $date_cmp){
-	    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." < cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
-	} else {
-	    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." >= cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
+	//if($date_curr < $date_cmp){
+	//    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." < cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
+	//} else {
+	//    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." >= cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
 
-	}
+	//}
 	/*while($date_curr->format('Y-m-d H:i:s') < $date_cmp->format('Y-m-d H:i:s') ) {
             $i = $i + 1;
 	    $date_logfile = explode(" : ", $log_set[$i]); 
@@ -286,7 +287,7 @@ function get_time_line($id, $oc, $dr, $box) {
 	}*/
         
 	//$time_line[] = substr( $date_str, 0, 19 );
-	$time_line[] = $date_tickmark." : ".$date_logfile[1];
+	//$time_line[] = $date_tickmark." : ".$date_logfile[1];
 	//$i = $i + 1;
     }
     //"Y-m-d H:i:s"
