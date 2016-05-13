@@ -257,47 +257,49 @@ function get_time_line($id, $oc, $dr, $box) {
     $date_curr = "";
 
 
-    foreach($log_set as $date_str) {
-        echo $date_str."\n";
-        //get the next date from the log set...        
-	//$date_log = explode(" : ", $date_str);
-	//$date_curr = new DateTime($date_log);
+    foreach($foo as $date_str) {
+        //echo $date_str."\n";
+
+
+	//echo $log_set[$i]."\n";
+	//echo $date_log[0]."\n";
+	//$date_logtxt = new DateTime($date_log[0]);
+        //echo var_dump($date_logtxt);
+
 
 	//get the next date in foo..
-	//$date_ticks = substr( $foo[i], 0, 19 );
-	//$date_cmp = new DateTime($date_tickmark);
+	$date_ticks = substr( $date_str, 0, 19 );
+	$date_foo = new DateTime($date_ticks);
 
-        //$i = $i + 1;
-
-        //echo "\nTICK".$date_tickmark."\n";
-        //echo "LOGG".$date_logfile[0]."\n";
-	
-       
-        //echo $date_curr->format('Y-m-d H:i:s')."\n";     
-	//if($date_curr < $date_cmp){
-	//    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." < cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
-	//} else {
-	//    echo "curr: ".$date_curr->format('Y-m-d H:i:s')." >= cmp: ".$date_cmp->format('Y-m-d H:i:s')."\n";
-
-	//}
-	/*while($date_curr->format('Y-m-d H:i:s') < $date_cmp->format('Y-m-d H:i:s') ) {
-            $i = $i + 1;
-	    $date_logfile = explode(" : ", $log_set[$i]); 
-	    $date_cmp = new DateTime($date_logfile[0]);
-	}*/
+        //get the next date from the log set...        
+	$date_log = explode(" : ", $log_set[$i]);
+	$date_logtxt = new DateTime($date_log[0]);
         
-	//$time_line[] = substr( $date_str, 0, 19 );
-	//$time_line[] = $date_tickmark." : ".$date_logfile[1];
-	//$i = $i + 1;
+	$length = count($log_set);
+	while($i < $length){
+            
+	    if($date_logtxt->format('Y-m-d H:i:s') >= $date_foo->format('Y-m-d H:i:s')){
+	        $time_line[] = "TIME: ".$date_ticks."\nSTAT: ".$date_log[1];
+		break;
+	    } else {
+                //get the next date from the log set...        
+	        $date_log = explode(" : ", $log_set[$i]);
+	        $date_logtxt = new DateTime($date_log[0]);
+	        
+                $i = $i + 1;    
+	    }
+	}
+
+
     }
     //"Y-m-d H:i:s"
     //$date = new DateTime('2000-01-01');
 
 
-    //echo var_dump($log_set);
+    //echo var_dump($foo);
     //echo var_dump($time_line);
 
-    return $time_line;
+    return json_encode($time_line);
 }
 
 ?>

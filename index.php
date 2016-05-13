@@ -105,6 +105,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	    </div><!-- end left -->
 	    <div id="right">
 	        <div id="chart1"></div>
+                <div style="padding-top:20px"><button value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button></div>
 		<div>Start Time:</div>
 		<div>End Time:</div>
 	    </div>
@@ -133,7 +134,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
     $(document).ready(function(){
         $.jqplot.config.enablePlugins = true;
-        //var plot1 = $.jqplot ('chart1', [[3,7,9,1,5,3,8,2,5]]);
+
+        var plot1 = $.jqplot ('chart1', [[0]]);
         var id = <?php echo $id; ?>;
         var oc = <?php echo $oc; ?>;
 	var dr = <?php echo $dr; ?>;
@@ -151,6 +153,82 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         //init_page (id, oc, dr);		    
 	update_page_display(id, oc, dr, "top");
     });
+
+    function update_page_display(id, oc, dr, box) {
+        $.ajax({
+            url: 'controller.php',
+            method: 'POST',
+	    data:  {'function': 'get_data_arr', 'id': id, 'oc': oc, 'dr': dr},
+	    success: function(str){
+	        //alert(str);
+
+                var arr = JSON.parse(str);
+
+		if(box == "top") {
+
+	            DATA_ARR_TOP = arr;
+		} else {
+
+	            DATA_ARR_BOT = arr;		
+		}
+
+		$.ajax({
+                    url: 'controller.php',
+                    method: 'POST',
+	            data:  {'function': 'init_page', 'id': id, 'oc': oc, 'dr': dr, 'size' : ROW_SIZE, 'box' : box},
+	            success: function(str){
+                        //alert(str);
+		        
+			var list_id = "#list_" + box;
+	                $(list_id).append(str);               
+                        
+			var length = 0;
+                        if(box == "top") {
+                            length = DATA_ARR_TOP.length;
+			    MAX_PAGE_TOP = Math.floor(length / ROW_SIZE);
+
+		            if( MAX_PAGE_TOP <= 0) {
+		                MAX_PAGE_TOP = 1;
+		            }
+
+			} else {
+                            length = DATA_ARR_BOT.length;
+			    MAX_PAGE_BOT = Math.floor(length / ROW_SIZE);
+
+		            if( MAX_PAGE_BOT <= 0) {
+		                MAX_PAGE_BOT = 1;
+		            }
+			    
+			}
+                       
+		        $.ajax({
+			    url: 'controller.php',
+			    method: 'POST',
+			    data: {'function': 'get_time_line', 'id': id, 'oc': oc, 'dr': dr, 'box': box},
+			    success: function(str) {
+			        
+				if(box == "top") {
+				    //SERIES_DATA_TOP = JSON.parse("["+str+"]");
+				    SERIES_DATA_TOP = JSON.parse(str); 
+				} else {
+				    SERIES_DATA_BOT = JSON.parse(str);
+				}
+				//console.log(str);
+				handle_row_display(0, box);
+
+                                //click the first row...
+			        var row_id = "#row0" + box;
+		                $(row_id).click(); 
+
+			    }
+			});
+
+	            }   
+                });
+	    }
+        });
+    
+    }
 
     function handle_row_display(page_num, box){
   
@@ -269,7 +347,15 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
 	options = {
 	    seriesColors: [ COLOR_0, COLOR_1],
-	    title: proc_name,
+	    title: proc_name, 
+            highlighter: {
+                show: true,
+                sizeAdjust: 14,
+                tooltipLocation: 'n',
+                tooltipAxes: 'y',
+                formatString:'#TRENTLabel# - %s',
+                useAxesFormatters: false
+            },
 	    legend: {
                 show: true,
                 rendererOptions: {
@@ -305,9 +391,13 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                 gridLineColor: 'grey',
                 gridLineWidth: 1,
                 borderColor: 'black'
-            }
+            },
+	    series: [  ]
 	};
-
+        console.log( SERIES_DATA_TOP[0][157] );
+        console.log( typeof(JSON.stringify(SERIES_DATA_TOP)) );
+	//console.log(JSON.stringify(SERIES_DATA_TOP));
+	options.series = [SERIES_DATA_TOP];
         plot1 = $.jqplot('chart1', [plot_num_top, plot_num_bot], options);
         plot1.replot( { resetAxes: true } );
     }
@@ -360,81 +450,44 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         }).responseText;
     }
 
-    function update_page_display(id, oc, dr, box) {
-        $.ajax({
-            url: 'controller.php',
-            method: 'POST',
-	    data:  {'function': 'get_data_arr', 'id': id, 'oc': oc, 'dr': dr},
-	    success: function(str){
-	        //alert(str);
 
-                var arr = JSON.parse(str);
+    /******************************************************************
+    * Calls a w2popup when a node on the graph is clicked. AJAX call
+    * will return the filename, test info, chart index, other stuff...
+    *****************************************************************/
+    $('#chart1').bind('jqplotDataClick', function (ev, seriesIndex, pointIndex, data) {
+        //console.log(plot1.options.series[seriesIndex].filepath);
+	//alert(plot1.options.series[seriesIndex].filepath);
+	//alert("POP UP"+pointIndex);
+        //alert(seriesIndex);
+	//alert(SERIES_DATA_TOP[seriesIndex][pointIndex]);
+	if (seriesIndex == 0){
+	    alert(SERIES_DATA_TOP[pointIndex]);
+	} else {
+	    alert(SERIES_DATA_BOT[pointIndex]);
+	}
 
-		if(box == "top") {
-
-	            DATA_ARR_TOP = arr;
-		} else {
-
-	            DATA_ARR_BOT = arr;		
-		}
-
-		$.ajax({
-                    url: 'controller.php',
-                    method: 'POST',
-	            data:  {'function': 'init_page', 'id': id, 'oc': oc, 'dr': dr, 'size' : ROW_SIZE, 'box' : box},
-	            success: function(str){
-                        //alert(str);
-		        
-			var list_id = "#list_" + box;
-	                $(list_id).append(str);               
-                        
-			var length = 0;
-                        if(box == "top") {
-                            length = DATA_ARR_TOP.length;
-			    MAX_PAGE_TOP = Math.floor(length / ROW_SIZE);
-
-		            if( MAX_PAGE_TOP <= 0) {
-		                MAX_PAGE_TOP = 1;
-		            }
-
-			} else {
-                            length = DATA_ARR_BOT.length;
-			    MAX_PAGE_BOT = Math.floor(length / ROW_SIZE);
-
-		            if( MAX_PAGE_BOT <= 0) {
-		                MAX_PAGE_BOT = 1;
-		            }
-			    
-			}
-                       
-		        $.ajax({
-			    url: 'controller.php',
-			    method: 'POST',
-			    data: {'function': 'get_time_line', 'id': id, 'oc': oc, 'dr': dr, 'box': box},
-			    success: function(str) {
-				if(box == "top") {
-				    SERIES_DATA_TOP = str;
-				} else {
-				    SERIES_DATA_BOT = str;
-				}
-				console.log(str);
-			    }
-			});
-
-                        handle_row_display(0, box);
-
-                        //click the first row...
-			var row_id = "#row0" + box;
-		        $(row_id).click(); 
-	            }   
-                });
-	    }
-        });
-    
-    }
+         /*$.ajax({
+		    data: {"function":"get_node_details", "file_name": plot1.options.series[seriesIndex].filepath, "index": pointIndex },
+		    url: "viewcontroller.php",
+		    method: "POST",
+		    success: function(str){
+		        //alert(str);
+			//$('#popup1').w2popup();
+			w2popup.open({
+                            title   : 'Node Details:',
+                            body    : str
+                        });
+		    }
+		});  */
+    });
 
     </script>
+	<script class="include" type="text/javascript" src="/dist/jquery.jqplot.js"></script>
 
+
+        <script class="include" type="text/javascript" src="/dist/plugins/jqplot.cursor.min.js"></script>
+        <script class="include" type="text/javascript" src="/dist/plugins/jqplot.highlighter.min.js"></script>
     </body><!-- end body -->
 
 </html>
