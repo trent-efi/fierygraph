@@ -23,8 +23,9 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     <head>
         <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
 	<title>FieryPerfmon Graph Portal:</title>  
-        <!--<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>-->
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> 	
+        <script src="http://evanplaice.github.io/jquery-csv/src/jquery.csv.js"></script>	
         <link href="http://getbootstrap.com/assets/css/docs.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="style.css">
         <script type="text/javascript" src="dist/jquery.jqplot.min.js"></script>
@@ -32,9 +33,14 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         <script type="text/javascript" src="dist/plugins/jqplot.highlighter.min.js"></script>
         <script type="text/javascript" src="dist/jquery.jqplot.js"></script>
         <script type="text/javascript" src="dist/plugins/jqplot.json2.js"></script>
+        <script type="text/javascript" src="dist/w2ui-1.4.3.js"></script>
+        <link rel="stylesheet" type="text/css" href="dist/w2ui-1.4.3.css" />
+	
+        <!--<script type="text/javascript" src="http://w2ui.com/src/w2ui-1.4.3.min.js"></script>-->
         <link rel="stylesheet" type="text/css" href="dist/jquery.jqplot.css" />	
     <head>
     <body>
+        <div id="cover"></div>
         <div id="top"><div onclick="goto_calculus()"><img src="/fieryperfmon/efi.logo"/></div></div>
 	<div id="content_wrapper">
 	    <div id="left">
@@ -55,12 +61,12 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 				<input id="dir_box_top" type="text" name="dir_name_top" placeholder="Ex: FieryPerfmon_1">
 				<button id="calc_btn_top" onclick="import_top()">Graph It!</button>
                             </div>
-                            <div id="box-wrap-right">
+                            <div id="box-wrap-right" >
                                 <div class="box-inner">
                                     <b>Choose a CSV to upload:</b>
 				</div>
-				<div class="box-inner">
-				    <input type="file" id="files" name="files[]" >
+				<div class="box-inner" >
+				    <input type="file" id="files_top" name="files[]"  style="border: none; color: white;">
 				</div>
                             </div>
 			</div><!-- end foot_box -->
@@ -91,7 +97,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                                     <b>Choose a CSV to upload:</b>
 				</div>
 				<div class="box-inner">
-				    <input type="file" id="files" name="files[]" >
+				    <input type="file" id="files_bot" name="files[]" style="border: none; color: white;">
 				</div>
                             </div>
 			</div><!-- end foot_box -->
@@ -107,7 +113,6 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	        <div id="chart1"></div>
                 <div style="padding-top:20px"><button value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button></div>
 		<div>Start Time:</div>
-		<div>End Time:</div>
 	    </div>
 	</div>	
 
@@ -126,11 +131,24 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     PLOT_NUM_TOP = new Array();
     PLOT_NUM_BOT = new Array();
 
+    INFO_TOP = "";
+    INFO_BOT = "";
+
     SERIES_DATA_TOP = new Array();
     SERIES_DATA_BOT = new Array();
 
     COLOR_0 = '#';
     COLOR_1 = '#';
+
+    /******************************************************************
+     * 2 Cent solution for page loading. Problem: Page would jump when
+     * all elements finished loading. Solution: show a mask while page 
+     * is loading and hide it after.  
+     *****************************************************************/
+    $(window).on('load', function() {
+	setTimeout( function() { $("#cover").hide(); }, 150);	
+    });
+
 
     $(document).ready(function(){
         $.jqplot.config.enablePlugins = true;
@@ -149,12 +167,31 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	    COLOR_1 = '#'+Math.floor(Math.random()*16777215).toString(16);
 	}
       
+        $('.prev_top').css({"visibility":"hidden"});
+        $('.next_top').css({"visibility":"hidden"});
+      
+        $('.prev_bot').css({"visibility":"hidden"});
+        $('.next_bot').css({"visibility":"hidden"});
+
+        //import csv from files logic
+	if(isAPIAvailable()) {
+            $('#files_top').bind('change', handleFileSelect_Top);
+            $('#files_bot').bind('change', handleFileSelect_Bot);
+        } else {
+            $('#files_top').bind('change', unsupported_function);
+            $('#files_bot').bind('change', unsupported_function);	
+	}
 
         //init_page (id, oc, dr);		    
 	update_page_display(id, oc, dr, "top");
     });
 
     function update_page_display(id, oc, dr, box) {
+        if (box == 'top') {
+	    INFO_TOP = id+"."+oc+" "+dr;
+	} else {
+	    INFO_BOT = id+"."+oc+" "+dr;	
+	}
         $.ajax({
             url: 'controller.php',
             method: 'POST',
@@ -229,6 +266,111 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         });
     
     }
+
+    function isAPIAvailable() {
+        // Check for the various File API support.
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            // Great success! All the File APIs are supported.
+            return true;
+        } else {
+            // source: File API availability - http://caniuse.com/#feat=fileapi
+            // source: <output> availability - http://html5doctor.com/the-output-element/
+            document.writeln('The HTML5 APIs used in this form are only available in the following browsers:<br />');
+            // 6.0 File API & 13.0 <output>
+            document.writeln(' - Google Chrome: 13.0 or later<br />');
+            // 3.6 File API & 6.0 <output>
+            document.writeln(' - Mozilla Firefox: 6.0 or later<br />');
+            // 10.0 File API & 10.0 <output>
+            document.writeln(' - Internet Explorer: Not supported (partial support expected in 10.0)<br />');
+            // ? File API & 5.1 <output>
+            document.writeln(' - Safari: Not supported<br />');
+            // ? File API & 9.2 <output>
+            document.writeln(' - Opera: Not supported');
+            return false;
+        }
+    }
+
+    function handleFileSelect_Bot(evt) {
+ 
+        var files = evt.target.files; // FileList object
+        var file = files[0];
+        printTable(file, 'bot');
+
+    }
+
+    function handleFileSelect_Top(evt) {
+
+        var files = evt.target.files; // FileList object
+        var file = files[0];
+        printTable(file, 'top');
+
+    }
+
+    function unsupported_function(evt){
+        alert("CSV import is unavailable on this browser.");
+    }
+
+
+    function printTable(file, box) {
+	//$('#chart1').html('<center><img id="loading_img" src="loading.gif"/></center>');        
+        var reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function(event) {
+	
+            var csv = event.target.result;
+            //alert(csv);
+	    
+            var data = $.csv.toArrays(csv);
+	    //alert(data);
+            var arr = []; 
+            var html = '<h2 id="list_header">Tolerance List:<br>'+file.name+'</h2><hr>\r\n';
+	    html += '<table>\r\n';
+	    var index = 0;
+	    var str = "";
+	    var first = 0;
+            for(var row in data) {
+	        if(first == 1) {
+
+		    if(data[row][1] != " ") {
+                        str = data[row][0].substring(2);
+		        var n = str.indexOf("\\");
+		        str = str.substring(n);
+			//$line = "<tr class='row_select_".$box."' id='row".$index.$box."'   onclick='start_selected(".$index.", \"".$box."\")'><td id='name".$index.$box."'>".$proc."</td></tr>";
+                        html +=   '<tr class="row_select_'+box+'" id="row' + index + box +'" onclick="start_selected('+index+', '+box+')"><td id="name'+ index + box +'">'+str+'</td></tr>\r\n';
+			arr[index] = [data[row]];
+
+		        index++;
+		    }
+		} else {
+		    first = 1;
+		}
+            }
+	    html += '</table>';
+
+	    if( box == 'top' ) {
+	        DATA_ARR_TOP = arr;
+	        len = DATA_ARR_TOP[0].length;
+		SERIES_DATA_TOP = Array(len).fill(0);
+                //SERIES_DATA_TOP = [];
+	    } else {
+                DATA_ARR_BOT = arr;
+		len = DATA_ARR_BOT[0].length;
+		SERIES_DATA_BOT = Array(len).fill(0);
+		//SERIES_DATA_BOT = [];
+	    }
+
+	    $('#chart1').html('');
+            $('#list1').html(html);
+				
+            handle_row_display(0, box);
+
+            //click the first row...
+            var row_id = "#row0" + box;
+	    $(row_id).click(); 
+        };
+        reader.onerror = function(){ alert('Unable to read ' + file.fileName); };
+    }
+
 
     function handle_row_display(page_num, box){
   
@@ -349,17 +491,16 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	    seriesColors: [ COLOR_0, COLOR_1],
 	    title: proc_name, 
             highlighter: {
-                show: true,
+                show: false,
                 sizeAdjust: 14,
                 tooltipLocation: 'n',
-                tooltipAxes: 'y',
+                tooltipAxes: 'n',
                 formatString:'#TRENTLabel# - %s',
                 useAxesFormatters: false
             },
 	    legend: {
                 show: true,
                 rendererOptions: {
-                    // numberColumns: 2,
                     fontSize: '10pt'
                 }
 	    },
@@ -369,10 +510,10 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	    cursor: {
                 zoom:true, 
                 looseZoom: true, 
-                showTooltip:true, 
+                showTooltip:false, 
                 followMouse: true, 
-                showTooltipOutsideZoom: true, 
-                constrainOutsideZoom: false
+                showTooltipOutsideZoom: false, 
+                constrainOutsideZoom: true 
             },
             axes: {
                 xaxis: {
@@ -394,10 +535,10 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
             },
 	    series: [  ]
 	};
-        console.log( SERIES_DATA_TOP[0][157] );
-        console.log( typeof(JSON.stringify(SERIES_DATA_TOP)) );
+        //console.log( SERIES_DATA_TOP[0][157] );
+        //console.log( typeof(JSON.stringify(SERIES_DATA_TOP)) );
 	//console.log(JSON.stringify(SERIES_DATA_TOP));
-	options.series = [SERIES_DATA_TOP];
+	//options.series = [SERIES_DATA_TOP];
         plot1 = $.jqplot('chart1', [plot_num_top, plot_num_bot], options);
         plot1.replot( { resetAxes: true } );
     }
@@ -452,34 +593,40 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
 
     /******************************************************************
-    * Calls a w2popup when a node on the graph is clicked. AJAX call
-    * will return the filename, test info, chart index, other stuff...
+    * Calls a w2popup when a node on the graph is clicked. 
     *****************************************************************/
     $('#chart1').bind('jqplotDataClick', function (ev, seriesIndex, pointIndex, data) {
-        //console.log(plot1.options.series[seriesIndex].filepath);
-	//alert(plot1.options.series[seriesIndex].filepath);
-	//alert("POP UP"+pointIndex);
-        //alert(seriesIndex);
-	//alert(SERIES_DATA_TOP[seriesIndex][pointIndex]);
+        series = "";
+
 	if (seriesIndex == 0){
-	    alert(SERIES_DATA_TOP[pointIndex]);
+
+	    if(SERIES_DATA_TOP[pointIndex] !== undefined ){
+	        series = SERIES_DATA_TOP[pointIndex];
+	    } else {
+	        series = "No Data Available";
+	    }
+
+            w2popup.open({
+                title   : '<b>Node Details: '+ INFO_TOP+"</b>",
+		buttons : '<button onclick="w2popup.close()">Close Me</button>',
+                body    : "<br><b style='font-size: 14px'>"+INFO_TOP+"</b><br><br>"+series
+            });
 	} else {
-	    alert(SERIES_DATA_BOT[pointIndex]);
+
+	    if(SERIES_DATA_BOT[pointIndex] !== undefined ){
+	        series = SERIES_DATA_BOT[pointIndex];
+	    } else {
+	        series = "No Data Available";
+	    }
+	
+            w2popup.open({
+                title   : '<b>Node Details: '+INFO_BOT+"</b>",
+		buttons : '<button onclick="w2popup.close()">Close Me</button>',		
+                body    : "<br><b style='font-size: 14px'>"+INFO_BOT+"</b><br><br>"+SERIES_DATA_BOT[pointIndex]  
+            });
+	    
 	}
 
-         /*$.ajax({
-		    data: {"function":"get_node_details", "file_name": plot1.options.series[seriesIndex].filepath, "index": pointIndex },
-		    url: "viewcontroller.php",
-		    method: "POST",
-		    success: function(str){
-		        //alert(str);
-			//$('#popup1').w2popup();
-			w2popup.open({
-                            title   : 'Node Details:',
-                            body    : str
-                        });
-		    }
-		});  */
     });
 
     </script>

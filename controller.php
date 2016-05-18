@@ -7,6 +7,7 @@ switch($action) {
     case 'check_url': $url = $_POST['url']; echo check_url($url); break;
     case 'get_data_arr' : $id = $_POST['id']; $oc = $_POST['oc']; $dr = $_POST['dr']; echo get_data_arr($id, $oc, $dr); break;
     case 'get_time_line':  $id = $_POST['id']; $oc = $_POST['oc']; $dr = $_POST['dr']; $box = $_POST['box']; echo get_time_line($id, $oc, $dr, $box); break;
+    case 'parse_csv_file': $csv = $_POST['csv']; $box = $_POST['box']; echo parse_csv_file($csv, $box); break;
     default: break;
 }
 
@@ -96,6 +97,51 @@ function init_page($id, $oc, $dr, $size, $box){
 
     return $list;
 }//end init_page()
+
+function parse_csv_file($csv, $box) {
+    $index = 0;
+
+    $list_all = $csv;
+
+    $list = "<table>";
+    ///////////////////////////////////////////////////////////////////////////
+    // Lists all of the processes reguardless of tolerance file...
+    ///////////////////////////////////////////////////////////////////////////
+    $first = 0;
+    $page = 0;
+    foreach($list_all as $all[0]){
+        if($first != 0){
+	    if($all[0][1] != " ") {
+	        $proc = substr($all[0][0], 2);//gets rid of first two '\' chars
+                $pos = strpos($proc, '\\');
+	        $proc = substr($proc, $pos);
+                $proc = preg_replace( '/[^[:print:]]/', '',$proc);
+                $line = "<tr class='row_select_".$box."' id='row".$index.$box."' onclick='start_selected(".$index.", \"".$box."\")'><td id='name".$index.$box."'>".$proc."</td></tr>";
+	        $list = $list.$line;
+                $data_arr[] = $all;
+	        $proc_arr[] = $proc;
+	        $index++;	
+	    }
+	} else {
+	    $first = 1;
+	}
+    }
+
+    $extra_rows = $index % $size;
+    $extra_rows = $size - $extra_rows;
+    $i = 0;
+
+    while($i < $extra_rows){
+	$list = $list."<tr class='row_select' id='row".$index."'><td></td></tr>";
+	$index++;
+        $i++;	
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    $list = $list."</table>";
+
+    return $list;
+}
 
 /**************************************
  * Parse FieryPerfmon_1.csv into 
@@ -279,7 +325,7 @@ function get_time_line($id, $oc, $dr, $box) {
 	while($i < $length){
             
 	    if($date_logtxt->format('Y-m-d H:i:s') >= $date_foo->format('Y-m-d H:i:s')){
-	        $time_line[] = "TIME: ".$date_ticks."\nSTAT: ".$date_log[1];
+	        $time_line[] = "TIME: <b>".$date_ticks."</b><br>STAT: <b>".$date_log[1]."</b>";
 		break;
 	    } else {
                 //get the next date from the log set...        
