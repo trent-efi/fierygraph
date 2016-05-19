@@ -98,7 +98,7 @@ body {
 .bot_box {
 
 }
-#files{
+#files_top, #files_bot{
     background-color: #333;
 }
 #cover {
@@ -109,4 +109,28 @@ body {
     left: 0; 
     background: #D9D9D9; 
     z-index:9999;
+}
+#reset_btn{
+    float: right; 
+}
+#time_info{
+    width: 99%;
+    /*border: 1px solid black;*/
+}
+#time_start_top, #time_start_bot{
+    float: left;
+}
+#time_stop_top, #time_stop_bot{
+    float: right;
+}
+#top_color{
+    width: 10px;
+    height: 10px;
+    background: white;    
+}
+#bot_color{
+    width: 10px;
+    height: 10px;
+    background: white;
+    
 }

@@ -23,7 +23,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     <head>
         <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
 	<title>FieryPerfmon Graph Portal:</title>  
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <!--<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>-->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> 	
         <script src="http://evanplaice.github.io/jquery-csv/src/jquery.csv.js"></script>	
         <link href="http://getbootstrap.com/assets/css/docs.min.css" rel="stylesheet">
@@ -39,14 +39,20 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         <!--<script type="text/javascript" src="http://w2ui.com/src/w2ui-1.4.3.min.js"></script>-->
         <link rel="stylesheet" type="text/css" href="dist/jquery.jqplot.css" />	
     <head>
+<!-- 
+<div style="padding-top:20px">
+    <button value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button>
+</div>
+-->
+
     <body>
         <div id="cover"></div>
-        <div id="top"><div onclick="goto_calculus()"><img src="/fieryperfmon/efi.logo"/></div></div>
+        <div id="top"><div onclick="goto_calculus()"><img src="/fieryperfmon/efi.logo"/><button id="reset_btn" value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button></div></div>
 	<div id="content_wrapper">
 	    <div id="left">
                 <!--//////////TOP////////////-->
                 <div class="data_box top_box">
-		    <div id="tol_head"><h2>Tolerance List:</h2><hr></div>
+		    <div id="tol_head_top"><h2>Tolerance List:</h2><hr></div>
 	            <div id="list_top"></div>
 		    <div id="footer_base">
                         <div>
@@ -77,7 +83,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
                 <!--////////////BOT//////////-->
                 <div class="data_box bot_box">
-		    <div id="tol_head"><h2>Tolerance List:</h2><hr></div>
+		    <div id="tol_head_bot"><h2>Tolerance List:</h2><hr></div>
 	            <div id="list_bot"></div>
 		    <div id="footer_base">
                         <div>
@@ -111,8 +117,14 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	    </div><!-- end left -->
 	    <div id="right">
 	        <div id="chart1"></div>
-                <div style="padding-top:20px"><button value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button></div>
-		<div>Start Time:</div>
+		<div id="time_info">
+		    <div id="time_start_top">Start Time: 00:00:00</div>
+		    <div id="time_stop_top">End Time: 00:00:00</div>
+		</div>
+		<div id="time_info">
+		    <div id="time_start_bot">Start Time: 00:00:00</div>
+		    <div id="time_stop_bot">End Time: 00:00:00</div>
+		</div>		
 	    </div>
 	</div>	
 
@@ -162,9 +174,26 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	console.log("oc: " + oc );
 	console.log("dr: " + dr );
 
-        while (COLOR_0 == COLOR_1){
+        /*while (COLOR_0 == COLOR_1){
 	    COLOR_0 = '#'+Math.floor(Math.random()*16777215).toString(16);
 	    COLOR_1 = '#'+Math.floor(Math.random()*16777215).toString(16);
+	}*/
+	var colors = ["#0000FF", 
+		      "#00BFFF", 
+		      "#006400", 
+		      "#8B008B", 
+		      "#8B0000", 
+		      "#DAA520", 
+		      "#008000", 
+		      "#00FF00", 
+		      "#FF4500", 
+		      "#800080"];
+
+	var size = colors.length;
+
+	while (COLOR_0 == COLOR_1) {
+	    COLOR_0 = colors[Math.floor(Math.random()*16777215) % size];
+	    COLOR_1 = colors[Math.floor(Math.random()*16777215) % size];
 	}
       
         $('.prev_top').css({"visibility":"hidden"});
@@ -172,6 +201,12 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
       
         $('.prev_bot').css({"visibility":"hidden"});
         $('.next_bot').css({"visibility":"hidden"});
+
+        $('#time_start_top').css({"visibility":"hidden"});
+        $('#time_stop_top').css({"visibility":"hidden"});	   
+
+        $('#time_start_bot').css({"visibility":"hidden"});
+        $('#time_stop_bot').css({"visibility":"hidden"});	   
 
         //import csv from files logic
 	if(isAPIAvailable()) {
@@ -189,8 +224,10 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     function update_page_display(id, oc, dr, box) {
         if (box == 'top') {
 	    INFO_TOP = id+"."+oc+" "+dr;
+	    $('#tol_head_top').html('<h2>Tolerance List: '+INFO_TOP+'</h2><hr>');
 	} else {
 	    INFO_BOT = id+"."+oc+" "+dr;	
+	    $('#tol_head_bot').html('<h2>Tolerance List: '+INFO_BOT+'</h2><hr>');	    
 	}
         $.ajax({
             url: 'controller.php',
@@ -246,9 +283,25 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 			        
 				if(box == "top") {
 				    //SERIES_DATA_TOP = JSON.parse("["+str+"]");
-				    SERIES_DATA_TOP = JSON.parse(str); 
+				    SERIES_DATA_TOP = JSON.parse(str);
+				    len = SERIES_DATA_TOP.length;
+
+				    var start_time = SERIES_DATA_TOP[0];
+				    var end_time = SERIES_DATA_TOP[len-1];
+	                            $('#time_start_top').html("<div id='top_color' style='background: "+COLOR_0+"'></div>Start Time: " + start_time.substring(9, 28));
+			            $('#time_stop_top').html( "<div id='top_color' style='background: "+COLOR_0+"'></div>End Time: " + end_time.substring(9, 28));
+                                    $('#time_start_top').css({"visibility":"visible"});
+                                    $('#time_stop_top').css({"visibility":"visible"}); 				    
 				} else {
 				    SERIES_DATA_BOT = JSON.parse(str);
+				    len = SERIES_DATA_BOT.length;
+
+				    var start_time = SERIES_DATA_BOT[0];
+				    var end_time = SERIES_DATA_BOT[len-1];
+	                            $('#time_start_bot').html("<div id='bot_color' style='background: "+COLOR_1+"'></div>Start Time: " + start_time.substring(9, 28));
+			            $('#time_stop_bot').html( "<div id='bot_color' style='background: "+COLOR_1+"'></div>End Time: " + end_time.substring(9, 28));	  
+                                    $('#time_start_bot').css({"visibility":"visible"});
+                                    $('#time_stop_bot').css({"visibility":"visible"}); 
 				}
 				//console.log(str);
 				handle_row_display(0, box);
@@ -294,6 +347,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
  
         var files = evt.target.files; // FileList object
         var file = files[0];
+        $('#time_start_bot').css({"visibility":"hidden"});
+        $('#time_stop_bot').css({"visibility":"hidden"});		
         printTable(file, 'bot');
 
     }
@@ -302,6 +357,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
         var files = evt.target.files; // FileList object
         var file = files[0];
+        $('#time_start_top').css({"visibility":"hidden"});
+        $('#time_stop_top').css({"visibility":"hidden"});		
         printTable(file, 'top');
 
     }
@@ -312,7 +369,6 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
 
     function printTable(file, box) {
-	//$('#chart1').html('<center><img id="loading_img" src="loading.gif"/></center>');        
         var reader = new FileReader();
         reader.readAsText(file);
         reader.onload = function(event) {
@@ -322,11 +378,13 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	    
             var data = $.csv.toArrays(csv);
 	    //alert(data);
-            var arr = []; 
-            var html = '<h2 id="list_header">Tolerance List:<br>'+file.name+'</h2><hr>\r\n';
+            var arr = series = []; 
+	    var html = '';
 	    html += '<table>\r\n';
 	    var index = 0;
 	    var str = "";
+	    var start_time = "";
+	    var stop_time = "";
 	    var first = 0;
             for(var row in data) {
 	        if(first == 1) {
@@ -336,32 +394,68 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 		        var n = str.indexOf("\\");
 		        str = str.substring(n);
 			//$line = "<tr class='row_select_".$box."' id='row".$index.$box."'   onclick='start_selected(".$index.", \"".$box."\")'><td id='name".$index.$box."'>".$proc."</td></tr>";
-                        html +=   '<tr class="row_select_'+box+'" id="row' + index + box +'" onclick="start_selected('+index+', '+box+')"><td id="name'+ index + box +'">'+str+'</td></tr>\r\n';
+                        html +=   "<tr class='row_select_"+box+"' id='row" + index + box +"' onclick='start_selected("+index+", \""+box+"\");'><td id='name"+ index + box +"'>"+str+"</td></tr>\r\n";
 			arr[index] = [data[row]];
 
 		        index++;
 		    }
 		} else {
+		    series = data[row];
+		    series.shift();
+		    var length = series.length;
+		    start_time = series[0].substring(0,19);
+		    stop_time = series[length - 1].substring(0,19);
+		    //start_time = "00:00:00";
+                    //stop_time = "00:00:00";
+ 
+                    for(var i in series){
+		        series[i] = "TIME: <b>"+series[i].substring(0,19)+"</b><br>STAT: <b>No Data Available</b>";
+		    }
+
 		    first = 1;
 		}
             }
 	    html += '</table>';
 
+            var length = 0;
+
 	    if( box == 'top' ) {
+	       
 	        DATA_ARR_TOP = arr;
-	        len = DATA_ARR_TOP[0].length;
-		SERIES_DATA_TOP = Array(len).fill(0);
-                //SERIES_DATA_TOP = [];
+	        length = DATA_ARR_TOP.length;
+	        MAX_PAGE_TOP = Math.floor(length / ROW_SIZE);
+
+		if( MAX_PAGE_TOP <= 0) {
+		    MAX_PAGE_TOP = 1;
+		}
+                INFO_TOP = "CSV File";
+	        $('#time_start_top').html("<div id='top_color' style='background: "+COLOR_0+"'></div>Start Time: 14:14:14" );
+	        $('#time_stop_top').html( "<div id='top_color' style='background: "+COLOR_0+"'></div>End Time: 14:14:14" );	  
+                $('#time_start_top').css({"visibility":"visible"});
+                $('#time_stop_top').css({"visibility":"visible"}); 
+                SERIES_DATA_TOP = series;
 	    } else {
                 DATA_ARR_BOT = arr;
-		len = DATA_ARR_BOT[0].length;
-		SERIES_DATA_BOT = Array(len).fill(0);
-		//SERIES_DATA_BOT = [];
+	        length = DATA_ARR_BOT.length;
+	        MAX_PAGE_BOT = Math.floor(length / ROW_SIZE);
+
+	        if( MAX_PAGE_BOT <= 0) {
+	            MAX_PAGE_BOT = 1;
+		}
+                INFO_BOT = "CSV File"; 
+	        $('#time_start_bot').html("<div id='bot_color' style='background: "+COLOR_1+"'></div>Start Time: " + start_time );
+	        $('#time_stop_bot').html( "<div id='bot_color' style='background: "+COLOR_1+"'></div>End Time: " + stop_time );	 
+                $('#time_start_bot').css({"visibility":"visible"});
+                $('#time_stop_bot').css({"visibility":"visible"});
+		SERIES_DATA_BOT = series;
 	    }
 
-	    $('#chart1').html('');
-            $('#list1').html(html);
-				
+	    //$('#chart1').html('');
+	    var head_id = "#tol_head_"+box;
+	    $(head_id).html('<h2>Tolerance List: CSV</h2><hr>');
+	    var list_id = "#list_"+box;
+            $(list_id).html(html);
+            console.log(html);				
             handle_row_display(0, box);
 
             //click the first row...
@@ -465,7 +559,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     function update_chart(data, index, box){
         var name = "#name"+index+box;
 	//var proc_name = "<h2>"+$(name).html()+"</h2>"; 
-        var proc_name = "<h2>Name Comming Soon</h2>";
+        //var proc_name = "<h2>Name Coming Soon</h2>";
+	var proc_name = "";
         var plot_num_top = [];
         var plot_num_bot = [];
 
@@ -488,7 +583,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	var options = {};        
 
 	options = {
-	    seriesColors: [ COLOR_0, COLOR_1],
+	    seriesColors: [ COLOR_0 ],
 	    title: proc_name, 
             highlighter: {
                 show: false,
@@ -499,6 +594,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                 useAxesFormatters: false
             },
 	    legend: {
+	        labels: [INFO_TOP],
                 show: true,
                 rendererOptions: {
                     fontSize: '10pt'
@@ -539,7 +635,15 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         //console.log( typeof(JSON.stringify(SERIES_DATA_TOP)) );
 	//console.log(JSON.stringify(SERIES_DATA_TOP));
 	//options.series = [SERIES_DATA_TOP];
-        plot1 = $.jqplot('chart1', [plot_num_top, plot_num_bot], options);
+        var data_plot = [plot_num_top];
+        console.log(plot_num_bot );
+        if(plot_num_top.length > 0 && plot_num_bot.length > 0){
+	    data_plot = [plot_num_top, plot_num_bot];
+	    options.seriesColors = [COLOR_0, COLOR_1];
+	    options.legend.labels = [INFO_TOP, INFO_BOT];
+	} 
+
+        plot1 = $.jqplot('chart1', data_plot, options);
         plot1.replot( { resetAxes: true } );
     }
 
@@ -566,14 +670,14 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         var url = build_url(cal_id, dir_name);
 
 	if( check_url(url) == 'true' ) {
-
-	    console.log("RETURNED TRUE");
-
 	    update_page_display(id, oc, dir_name, box);
 	} else {
-
-	    console.log("RETURNED FALSE");
-            //$("#error_msg").css("visibility","visible");
+	    w2popup.open({
+                title   : '<b>No Data Found</b>',
+		buttons : '<button onclick="w2popup.close()">Close</button>',		
+                body    : "<br><b>ERROR:</b> No FieryPerfmon graphing data was found<br><b>URL: </b>" + url,
+		width   : 600 
+            });
 	}
     }
 
@@ -596,7 +700,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     * Calls a w2popup when a node on the graph is clicked. 
     *****************************************************************/
     $('#chart1').bind('jqplotDataClick', function (ev, seriesIndex, pointIndex, data) {
-        series = "";
+        var series = "";
+        //var arr = data.split(',');
 
 	if (seriesIndex == 0){
 
@@ -622,7 +727,8 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
             w2popup.open({
                 title   : '<b>Node Details: '+INFO_BOT+"</b>",
 		buttons : '<button onclick="w2popup.close()">Close Me</button>',		
-                body    : "<br><b style='font-size: 14px'>"+INFO_BOT+"</b><br><br>"+SERIES_DATA_BOT[pointIndex]  
+                body    : "<br><b style='font-size: 14px'>"+INFO_BOT+"</b><br><br>"+series
+  
             });
 	    
 	}
