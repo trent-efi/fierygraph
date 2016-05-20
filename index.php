@@ -452,7 +452,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
 	    //$('#chart1').html('');
 	    var head_id = "#tol_head_"+box;
-	    $(head_id).html('<h2>Tolerance List: CSV</h2><hr>');
+	    $(head_id).html('<h2>Tolerance List: CSV File</h2><hr>');
 	    var list_id = "#list_"+box;
             $(list_id).html(html);
             console.log(html);				
@@ -714,7 +714,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
             w2popup.open({
                 title   : '<b>Node Details: '+ INFO_TOP+"</b>",
 		buttons : '<button onclick="w2popup.close()">Close Me</button>',
-                body    : "<br><b style='font-size: 14px'>"+INFO_TOP+"</b><br><br>"+series
+                body    : "<br><b style='font-size: 14px'>"+INFO_TOP+"</b><br><br>"+series+"<br><div id='top_color' style='background: "+COLOR_0+"'></div>"
             });
 	} else {
 
@@ -727,7 +727,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
             w2popup.open({
                 title   : '<b>Node Details: '+INFO_BOT+"</b>",
 		buttons : '<button onclick="w2popup.close()">Close Me</button>',		
-                body    : "<br><b style='font-size: 14px'>"+INFO_BOT+"</b><br><br>"+series
+                body    : "<br><b style='font-size: 14px'>"+INFO_BOT+"</b><br><br>"+series+"<br><div id='bot_color' style='background: "+COLOR_1+"'></div>"
   
             });
 	    
