@@ -369,10 +369,12 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
 
     function printTable(file, box) {
+
         var reader = new FileReader();
         reader.readAsText(file);
         reader.onload = function(event) {
-	
+            reader.fileName = file.name;
+	    //alert(reader.fileName);
             var csv = event.target.result;
             //alert(csv);
 	    
@@ -428,9 +430,9 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 		if( MAX_PAGE_TOP <= 0) {
 		    MAX_PAGE_TOP = 1;
 		}
-                INFO_TOP = "CSV File";
-	        $('#time_start_top').html("<div id='top_color' style='background: "+COLOR_0+"'></div>Start Time: 14:14:14" );
-	        $('#time_stop_top').html( "<div id='top_color' style='background: "+COLOR_0+"'></div>End Time: 14:14:14" );	  
+                INFO_TOP = reader.fileName;
+	        $('#time_start_top').html("<div id='top_color' style='background: "+COLOR_0+"'></div>Start Time: "+start_time );
+	        $('#time_stop_top').html( "<div id='top_color' style='background: "+COLOR_0+"'></div>End Time: "+stop_time );	  
                 $('#time_start_top').css({"visibility":"visible"});
                 $('#time_stop_top').css({"visibility":"visible"}); 
                 SERIES_DATA_TOP = series;
@@ -442,7 +444,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	        if( MAX_PAGE_BOT <= 0) {
 	            MAX_PAGE_BOT = 1;
 		}
-                INFO_BOT = "CSV File"; 
+                INFO_BOT = reader.fileName; 
 	        $('#time_start_bot').html("<div id='bot_color' style='background: "+COLOR_1+"'></div>Start Time: " + start_time );
 	        $('#time_stop_bot').html( "<div id='bot_color' style='background: "+COLOR_1+"'></div>End Time: " + stop_time );	 
                 $('#time_start_bot').css({"visibility":"visible"});
@@ -452,7 +454,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
 	    //$('#chart1').html('');
 	    var head_id = "#tol_head_"+box;
-	    $(head_id).html('<h2>Tolerance List: CSV File</h2><hr>');
+	    $(head_id).html('<h2>Tolerance List: '+reader.fileName+'</h2><hr>');
 	    var list_id = "#list_"+box;
             $(list_id).html(html);
             console.log(html);				
