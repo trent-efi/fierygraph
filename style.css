@@ -1,12 +1,10 @@
-html {
-    width:100%;
-    height:100%;
-}
 body {
     margin: 0;
     padding: 0;
-    height: 100%;
-    width: 100%;
+}
+.shrinker{
+    height: auto;
+    width: auto;
 }
 * {
    margin: 0;
@@ -18,6 +16,7 @@ body {
     width: 100%;
     height: 5%;
     background-color: #205081;
+    color: white;
 }
 #content_wrapper {
     width: 100%;
@@ -47,7 +46,7 @@ body {
     display: inline-block;
 }
 #chart1 {
-    height: 95%;
+    height: 93%;
     width: 95%;
    /*border: 1px solid orange;*/ 
 }
@@ -133,4 +132,21 @@ body {
     height: 10px;
     background: white;
     
+}
+@viewport {
+    width: device-width;
+    zoom: .5;
+  }
+#help_icon{
+   height: 25px;
+   width: 25px;
+}
+#efi_logo{
+    float: left;
+}
+#help_logo {
+    float: right;
+}
+#zoom_reset {
+    /*float: right;*/
 }

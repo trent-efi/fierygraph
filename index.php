@@ -1,11 +1,11 @@
 <?php
 include 'controller.php';
 
-$id = "NULL";
-$oc = "NULL";
-$dr = "NULL";
+$id = "null";
+$oc = "null";
+$dr = "null";
 
-$action_id = "NULL";
+$action_id = "EMPTY";
 
 if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
@@ -35,7 +35,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         <script type="text/javascript" src="dist/plugins/jqplot.json2.js"></script>
         <script type="text/javascript" src="dist/w2ui-1.4.3.js"></script>
         <link rel="stylesheet" type="text/css" href="dist/w2ui-1.4.3.css" />
-	
+        <meta name="viewport" content="width=device-width" />	
         <!--<script type="text/javascript" src="http://w2ui.com/src/w2ui-1.4.3.min.js"></script>-->
         <link rel="stylesheet" type="text/css" href="dist/jquery.jqplot.css" />	
     <head>
@@ -45,9 +45,12 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 </div>
 -->
 
-    <body>
+    <body><div class="shrinker">
         <div id="cover"></div>
-        <div id="top"><div onclick="goto_calculus()"><img src="/fieryperfmon/efi.logo"/><button id="reset_btn" value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button></div></div>
+        <div id="top">
+	    <div id="efi_logo"><img src="efi.logo"/></div>
+	    <div id="help_logo" onclick="show_help();">Help<img id="help_icon" src="help.png"></div>
+	</div>
 	<div id="content_wrapper">
 	    <div id="left">
                 <!--//////////TOP////////////-->
@@ -116,6 +119,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
                 <!--/////////////////////////-->    
 	    </div><!-- end left -->
 	    <div id="right">
+	        <div id="zoom_reset"><button id="reset_btn" value="reset" type="button" onclick="plot1.resetZoom();">Reset Zoom</button></div>
 	        <div id="chart1"></div>
 		<div id="time_info">
 		    <div id="time_start_top">Start Time: 00:00:00</div>
@@ -162,6 +166,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
     });
 
 
+
     $(document).ready(function(){
         $.jqplot.config.enablePlugins = true;
 
@@ -169,10 +174,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
         var id = <?php echo $id; ?>;
         var oc = <?php echo $oc; ?>;
 	var dr = <?php echo $dr; ?>;
-        
-	console.log("id: " + id );
-	console.log("oc: " + oc );
-	console.log("dr: " + dr );
+
 
         /*while (COLOR_0 == COLOR_1){
 	    COLOR_0 = '#'+Math.floor(Math.random()*16777215).toString(16);
@@ -218,8 +220,65 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	}
 
         //init_page (id, oc, dr);		    
-	update_page_display(id, oc, dr, "top");
+	if(id !== null && oc !== null && dr !== null ) {
+	    update_page_display(id, oc, dr, "top");
+	}
     });
+
+    function show_help(){
+	w2popup.open({
+            title   : "<b>Help</b><img src='help_dark.png' height='20' width='20'>",
+	    buttons : "<button onclick='w2popup.close()'>Close</button>",
+            body    : "<div><b>About:</b></div>"+
+	              "<div>FieryGraph is an interactive tool to visualize performance on the Fiery. When</div>"+
+                      "<div>FieryPerfmon --stop is successfully called from a Calculus test, you can graph</div>"+
+                      "<div>the data collected in the FieryPerfmon_1.csv file. To create a clickable link</div>"+
+                      "<div>from your Calculus log files, make sure that a '-g' or '--graph' flag is</div>"+
+                      "<div>included on the args when calling '--stop' or '-X' in FieryPerfmon.</div><br>"+
+
+		      "<div><b>Example in Calculus to create link to FieryGraph: </b><div>"+
+                      "<div>FieryPerfmon -g --stop</div><br>"+
+    
+                      "<div><b>Using FieryGraph:</b></div><br>"+
+
+                      "<div><b>--Nodes on the graph:</b></div>"+
+                      "<div>Click a node on the graph and a pop-up will show some details about this data</div>"+
+                      "<div>point. </div><br>"+
+
+                      "<div><b>--Zooming in on the graph:</b></div>"+
+                      "<div>Click and drag the mouse on the chart to zoom in to get a closer view of </div>"+
+                      "<div>tightly clustered nodes.</div><br>"+
+
+                      "<div><b>--Resetting zoom:</b></div>"+
+                      "<div>Click on the reset button on the top of the page to get back to your original</div>"+
+                      "<div>view of the graph.</div><br>"+
+
+                      "<div><b>--Comparing data:</b></div>"+
+                      "<div>You have two different ways of importing data into FieryGraph...</div><br>"+
+	              "<div><img src='graph.png' height='150' width='200'></div><br>"+
+
+                      "<div><b>a)</b></div>"+
+                      "<div>FieryGraph can now graph two different sets of FieryPermon_1.csv data on the </div>"+
+                      "<div>same page. In the empty web form on the left column at the bottom of the page,</div>"+
+                      "<div>enter in the Calculus ID and Occurrence ID into the 'Calculus ID' text box, </div>"+
+		      "<div><img src='cal_id.png'></div>"+
+                      "<div>the log directory name into the 'Directory Name' text box and click the 'Graph It!'</div>"+
+                      "<div>button.</div>"+
+		      "<div><img src='dir_name.png'></div><br>"+		      
+
+                      "<div><b>b)</b></div>"+
+                      "<div>Click on the 'Choose File' button on next to 'Choose a CSV to upload' and find </div>"+
+                      "<div>the CSV file you have previously downloaded from a FieryPerfmon Calculus log </div>"+
+                      "<div>directory. Using this option to load the data won't import all of the time-line</div>"+
+                      "<div>data you get from using the method above.</div>"+
+		      "<div><img src='csv_upload.png'></div>",	    
+            height: 1200 
+        });
+    }
+
+    function set_colors(){
+    
+    }
 
     function update_page_display(id, oc, dr, box) {
         if (box == 'top') {
@@ -715,7 +774,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
             w2popup.open({
                 title   : '<b>Node Details: '+ INFO_TOP+"</b>",
-		buttons : '<button onclick="w2popup.close()">Close Me</button>',
+		buttons : '<button onclick="w2popup.close()">Close</button>',
                 body    : "<br><b style='font-size: 14px'>"+INFO_TOP+"</b><br><br>"+series+"<br><div id='top_color' style='background: "+COLOR_0+"'></div>"
             });
 	} else {
@@ -728,7 +787,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 	
             w2popup.open({
                 title   : '<b>Node Details: '+INFO_BOT+"</b>",
-		buttons : '<button onclick="w2popup.close()">Close Me</button>',		
+		buttons : '<button onclick="w2popup.close()">Close</button>',		
                 body    : "<br><b style='font-size: 14px'>"+INFO_BOT+"</b><br><br>"+series+"<br><div id='bot_color' style='background: "+COLOR_1+"'></div>"
   
             });
@@ -743,7 +802,7 @@ if($_GET['id'] && $_GET['oc'] && $_GET['dir'] ){
 
         <script class="include" type="text/javascript" src="/dist/plugins/jqplot.cursor.min.js"></script>
         <script class="include" type="text/javascript" src="/dist/plugins/jqplot.highlighter.min.js"></script>
-    </body><!-- end body -->
+    </div></body><!-- end body -->
 
 </html>
 
